@@ -1,5 +1,4 @@
 # C++ objects and libs
-
 *.slo
 *.lo
 *.o
@@ -10,11 +9,21 @@
 *.dll
 *.dylib
 
-# Qt-es
+#binary
+RayTracer
 
+# Qt
 *.pro.user
 *.pro.user.*
 moc_*.cpp
 qrc_*.cpp
 Makefile
 *-build-*
+
+#KDE
+*~
+.directory
+
+#Doxygen
+html/*
+latex/*
