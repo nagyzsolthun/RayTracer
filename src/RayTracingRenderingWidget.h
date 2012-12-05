@@ -6,6 +6,7 @@
 #include <QThread>
 #include <QWidget>
 #include <QProgressBar>
+#include <QElapsedTimer>
 
 #include "RayTracing/Camera.h"
 
@@ -30,7 +31,7 @@ signals:
 	/** @brief signal emited when rendering of one row is finished*/
 	void rowRendered();
 private:
-	QColor toQColor(const Color color);
+	QColor toQColor(const Color color) const;
 
 	const RayTracerCam * cam;
 	int starty, endy;
@@ -68,6 +69,7 @@ private:
 	QList<RayTracingThread*> threads;
 	unsigned int numberofThreads;
 	unsigned int numberofActiveThreads;
+	QElapsedTimer elapsedTimer;		//to calculate time of rendering
 	
 };
 

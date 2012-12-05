@@ -8,7 +8,7 @@ ViewRay::ViewRay(const Vect3D a, const Vect3D b, const DetailedTri3D* startTri, 
 	this->depth = depth;
 	closest = 0;
 }
-Color ViewRay::shotAt(const DetailedSpace3D & space) {
+Color ViewRay::shotAt(const DetailedSpace3D & space) const {
 	const Color BLACK = Color();
 
 	for(DetailedSpace3D::const_iterator i = space.begin(); i!=space.end(); i++) shotAt(*i);
@@ -23,7 +23,7 @@ Color ViewRay::shotAt(const DetailedSpace3D & space) {
 		result += ViewRay(closestCross, closestCross+refrV(), closest, depth-1).shotAt(space) * closest->getTransp();
 	return result;
 }
-void ViewRay::shotAt(const DetailedTri3D & acttri) {
+void ViewRay::shotAt(const DetailedTri3D & acttri) const {
 	if(startTri == &acttri) return;
 	if(! acttri.isCrossed(*this)) return;
 

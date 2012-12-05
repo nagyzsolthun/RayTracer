@@ -26,16 +26,16 @@ public:
 	/**
 	 * Shots the ray and returns the result of the recursion.
 	 */
-	Color shotAt(const DetailedSpace3D & space);
+	Color shotAt(const DetailedSpace3D & space) const;
 private:
-	void shotAt(const DetailedTri3D & acttri);
+	void shotAt(const DetailedTri3D & acttri) const;
 	Vect3D reflV() const;
 	Vect3D refrV() const;
 	
 	unsigned int depth;		//recursion depth
 	const DetailedTri3D* startTri;
-	const DetailedTri3D* closest;	//found closest
-	Vect3D closestCross;		//position of cross
+	const DetailedTri3D mutable * closest;	//found closest
+	mutable Vect3D closestCross;		//position of cross
 };
 
 /**

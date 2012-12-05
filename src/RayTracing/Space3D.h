@@ -166,7 +166,7 @@ public:
 	 * @warning If v is null then result is true.
 	 * @warning If normal vector of plane is null then result is true.
 	 */
-	bool isParallel(const Plane3D plane) const;
+	bool isParallel(const Plane3D s) const;
 	
 	/**
 	 * @brief Distance between p and intersection of line and plane where unit is length of v; sign of value is positive if p is under plane, negative if above.

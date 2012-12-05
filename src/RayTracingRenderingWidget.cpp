@@ -1,5 +1,6 @@
 #include "RayTracingRenderingWidget.h"
 
+#include <QElapsedTimer>
 #include <iostream>
 
 //--------------------------------------RayTracingThread----------------------------------------------------------------
@@ -20,7 +21,7 @@ void RayTracingThread::run() {
 		emit rowRendered();
 	}
 }
-QColor RayTracingThread::toQColor(const Color color) {
+QColor RayTracingThread::toQColor(const Color color) const {
 	QColor result(255,255,255);
 	const float r = color.getR();
 	const float g = color.getG();
@@ -39,6 +40,7 @@ RayTracingRenderingWidget::RayTracingRenderingWidget(QWidget * parent) : QWidget
 }
 
 void RayTracingRenderingWidget::render(const RayTracerCam * cam, QImage * img) {
+	elapsedTimer.start();
 	progressBar->setMinimum(0);
 	progressBar->setMaximum(cam->getYres());
 	progress = 0;
@@ -74,5 +76,6 @@ void RayTracingRenderingWidget::threadFinished() {
 		QList<RayTracingThread*>::iterator i;
 		for (i = threads.begin(); i!=threads.end(); i++) delete(*i);
 		threads.clear();
+		std::cout << "rendering time: " << elapsedTimer.elapsed() << " ms" << std::endl;
 	}
 }

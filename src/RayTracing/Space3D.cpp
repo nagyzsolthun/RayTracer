@@ -55,12 +55,12 @@ Line3D::Line3D(){}
 Line3D::Line3D(const Vect3D a, const Vect3D b) {set(a,b);}
 void Line3D::set(const Vect3D a, const Vect3D b) {p = a; v = b-a;}
 bool Line3D::isParallel(const Plane3D s) const {
-	//true if line is parallel with plain, false otherwise
-	if(v*s.getN() == 0) return true;	//if dot product is 0 then two vectors have right angel.  this is the exact situation when plane is parallel with line
-	return false;
+	//true if line is parallel with plane, false otherwise
+	const Vect3D n = s.getN();
+	return ! (v*n);	//if dot product is 0 then two vectors have right angel <=> plane is parallel with line
 }
 float Line3D::distsign(const Plane3D s) const {
-	//returns t parameter in p+v*t that is needed to reach plain.
+	//returns t parameter in p+v*t that is needed to reach plane.
 	const Vect3D sp = s.getP();
 	const Vect3D sn = s.getN();
 	float t = ((sp-p) * sn) / (v*sn);
@@ -73,10 +73,10 @@ Vect3D Line3D::getV() const {return v;}
 //--------------------------------------HalfLine3D----------------------------------------------------------------
 HalfLine3D::HalfLine3D() : Line3D() {}
 HalfLine3D::HalfLine3D(const Vect3D a, const Vect3D b){set(a,b);}
-bool HalfLine3D::isCrossing(const Plane3D plain) const {
-	if(Line3D::isParallel(plain)) return false;
+bool HalfLine3D::isCrossing(const Plane3D plane) const {
+	if(Line3D::isParallel(plane)) return false;
 
-	if(distsign(plain) < 0) return false;	//if crosspoint is behind startingpoint..
+	if(distsign(plane) < 0) return false;	//if crosspoint is behind startingpoint..
 	return true;
 }
 //--------------------------------------Sect3D----------------------------------------------------------------
