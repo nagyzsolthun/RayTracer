@@ -156,61 +156,77 @@ private:
 	float r,g,b;
 };
 
-/**
- * @brief 3D triangle that has a color, reflection, transparency and transulency
+/** @brief color and position
+ *
+ * DetailedTri3D contains fotons - these objects define how light each part of the triangle is.
+ * The more foton a triangle has the more precize the lighting effect is.
  */
+class Foton {
+public:
+	/** @brief black color in origo*/
+	Foton();
+
+	/** @brief given color in given position*/
+	Foton(const Vect3D pos, const Color color);
+	
+	/** @brief position of Foton*/
+	Vect3D getPos() const;
+	
+	/** @brief color of Foton*/
+	Color getColor() const;
+private:
+	Vect3D pos;
+	Color color;
+};
+
+/** @brief 3D triangle that has a color, reflection, transparency and transulency*/
 class DetailedTri3D : public CrossableTri3D {
 public:
 	
-	/**
-	 * @brief Construts a triangle with given verticies.
-	 */
+	/** @brief Construts a triangle with given verticies*/
 	DetailedTri3D(const Vect3D a, const Vect3D b, const Vect3D c);
 	
-	/**
-	 * @brief Setter for active color.
-	 */
+	/** @brief Setter for active color*/
 	void setActive(const Color active);
 	
-	/**
-	 * @brief Setter for reflection.
-	 */
+	/** @brief Setter for reflection*/
 	void setRefl(const Color refl);
 	
-	/**
-	 * @brief Setter for transparency.
-	 */
+	/** @brief Setter for transparency*/
 	void setTransp(const Color transp);
 	
-	/**
-	 * @brief Setter for refraction. TODO document it!
-	 */
+	/** @brief Setter for refraction. TODO document it!*/
 	void setRefr(const float refr);
 	
-	/**
-	 * @brief active color.
-	 */
+	/** @brief active color*/
 	Color getActive() const;
 	
-	/**
-	 * @brief reflection.
-	 */
+	/** @brief reflection*/
 	Color getRefl() const;
 	
-	/**
-	 * @brief transparency.
-	 */
+	/** @brief transparency*/
 	Color getTransp() const;
 	
-	/**
-	 * @brief refraction.	TODO document it
-	 */
+	/** @brief refraction.	TODO document it*/
 	float getRefr() const;
+	
+	/** @brief adds a foton to list of fotons*/
+	void addFoton(const Foton foton) const;
+	
+	/**
+	 * @brief brightness of a point estimated from positions of fotons
+	 * 
+	 * result is sum of fn( dist(pos,foton), r ) for each fotons, where fn is TODO
+	 * @param pos position of measurement
+	 * @param r radius of measurement
+	 */
+	Color getBrightess(const Vect3D pos, const float r) const;
 private:
 	Color active;
 	Color refl;
 	Color transp;
 	float refr;
+	mutable std::list<Foton> fotons;	//lighting -> we assume that fotons are on surface of triangle	 //TODO why mutable
 };
 
 /**

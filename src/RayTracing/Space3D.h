@@ -218,7 +218,7 @@ public:
 	HalfLine3D();
 	
 	/**
-	 * @brief Construts a half-line given 2 vectors that are points of the half-line.
+	 * @brief Construts a half-line from given 2 vectors that are points of the half-line.
 	 * 
 	 * Two points can define a unique half-line. If points are the same then direction of line is a null vector.
 	 * @param a is the starting point of half-line.
@@ -266,7 +266,7 @@ public:
 /**
  * @brief functionality for rotating vectors in 3D.
  * 
- * Rot3D is a line that behaves as an axis in 3D.
+ * Axis3D is a line that behaves as an axis in 3D.
  */
 class Axis3D : public Line3D {
 public:

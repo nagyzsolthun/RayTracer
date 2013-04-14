@@ -2,48 +2,68 @@
 
 #include <cstdlib>
 
-//--------------------------------------ViewRay----------------------------------------------------------------
-ViewRay::ViewRay(const Vect3D a, const Vect3D b, const DetailedTri3D* startTri, const unsigned int depth) : HalfLine3D(a,b) {
+//--------------------------------------Ray----------------------------------------------------------------
+Ray::Ray(const Vect3D a, const Vect3D b, const DetailedTri3D* const startTri) : HalfLine3D(a,b) {
 	this->startTri = startTri;
-	this->depth = depth;
 	closest = 0;
 }
-Color ViewRay::shotAt(const DetailedSpace3D & space) const {
-	const Color BLACK = Color();
-
-	for(DetailedSpace3D::const_iterator i = space.begin(); i!=space.end(); i++) shotAt(*i);
-	if(! closest) return BLACK;	//no hit, return black
-
-	Color result = closest->getActive();
-	if(depth < 1) return result;	//no more recursion!
-
-	if(closest->getRefl() != BLACK)
-		result += ViewRay(closestCross, closestCross+reflV(), closest, depth-1).shotAt(space) * closest->getRefl();
-	if(closest->getTransp() != BLACK)
-		result += ViewRay(closestCross, closestCross+refrV(), closest, depth-1).shotAt(space) * closest->getTransp();
-	return result;
+Vect3D Ray::reflV(const DetailedTri3D* const tri) const {
+	//direction of reflection
+	//assuming that tri is exist
+	const Vect3D v = getV();
+	const Plane3D surf = tri->surface();
+	const Vect3D n = surf.getN();
+	const float t = surf.distsign(surf.getP()+v);
+	return v - n*t*2;
 }
-void ViewRay::shotAt(const DetailedTri3D & acttri) const {
+Vect3D Ray::refrV(const DetailedTri3D* const tri) const {
+	return getV();	//TODO
+}
+void Ray::shotAt(const DetailedTri3D & acttri) const {
 	if(startTri == &acttri) return;
 	if(! acttri.isCrossed(*this)) return;
 
-	Vect3D actCross = cross(acttri.surface());
+	const Vect3D actCross = cross(acttri.surface());
 	const Vect3D p = getP();
 	if(closest && p.dist2(actCross)>p.dist2(closestCross)) return;
 
 	closest = &acttri;
 	closestCross = actCross;
 }
-Vect3D ViewRay::reflV() const {
-	//direction of reflection
-	//assuming that closest is exist
-	const Vect3D n = closest->surface().getN();
-	const Vect3D v = getV();
-	const float t = closest->surface().distsign(closestCross+v);
-	return v - n*t*2;
+const DetailedTri3D * Ray::getClosest() const		{return closest;}
+Vect3D Ray::getClosestCross() const					{return closestCross;}
+//--------------------------------------ViewRay----------------------------------------------------------------
+ViewRay::ViewRay(const Vect3D a, const Vect3D b, const DetailedTri3D* const startTri, const unsigned int depth) : Ray(a,b,startTri) {
+	this->depth = depth;
 }
-Vect3D ViewRay::refrV() const {
-	return getV();	//TODO
+Color ViewRay::shotAt(const DetailedSpace3D & space) const {
+	const Color BLACK = Color();	//TODO: global constant
+
+	for(DetailedSpace3D::const_iterator i = space.begin(); i!=space.end(); i++) Ray::shotAt(*i);
+	const DetailedTri3D * closest = getClosest();	//TODO: nicer
+
+	if(! closest) return BLACK;	//no hit, return black
+
+	Color result = closest->getActive();
+	if(depth < 1) return result;	//no more recursion!
+	
+	const Color refl = closest->getRefl();
+	const Color transp = closest->getTransp();
+	//these values could be put directly into the next expressions -> but it is readable this way
+	//also compiler should recognize this optimizing option
+	
+	if(refl != BLACK) {
+		const Vect3D a = getClosestCross();
+		const Vect3D b = getClosestCross()+reflV(closest);
+		//these values could be put directly as parameters down -> it is only readable this way
+		result += ViewRay(a,b, getClosest(), depth-1).shotAt(space) * refl;
+	}
+	if(transp != BLACK) {
+		const Vect3D a = getClosestCross();
+		const Vect3D b = getClosestCross()+refrV(closest);
+		result += ViewRay(a,b, getClosest(), depth-1).shotAt(space) * transp;
+	}
+	return result;
 }
 //--------------------------------------ViewRayGroup----------------------------------------------------------------
 ViewRayGroup::ViewRayGroup(const Vect3D pos, const Vect3D focus, const Vect3D hdir, const Vect3D vdir, const float r, const float raydist) {
@@ -68,4 +88,34 @@ Color ViewRayGroup::shotAt(const DetailedSpace3D & space) const {
 				resultSum += ViewRay(pos + hdir*x + vdir*y, focus).shotAt(space);
 			}
 	return resultSum / count;
+}
+//--------------------------------------FotonRay----------------------------------------------------------------
+FotonRay::FotonRay(const Vect3D a, const Vect3D b, const Color color, const DetailedTri3D* const startTri, const unsigned int depth) : Ray(a,b,startTri) {
+	this->color = color;
+	this->depth = depth;
+}
+void FotonRay::shotAt(const DetailedSpace3D & space) const {
+	for(DetailedSpace3D::const_iterator i = space.begin(); i!=space.end(); i++) Ray::shotAt(*i);
+	const DetailedTri3D * closest = getClosest();
+
+	if(! closest) return;	//no hit
+	if(depth < 1) return;	//no more recursion! TODO: check... number of recursion
+	
+	const Color BLACK = Color();
+	const Color refl = closest->getRefl();
+	const Color transp = closest->getTransp();
+	//these values could be put directly into the next expressions -> but it is readable this way
+	//also compiler should recognize this optimizing option
+	
+	if(refl != BLACK) { 
+		const Vect3D a = getClosestCross();
+		const Vect3D b = getClosestCross()+reflV(closest);
+		//these values could be put directly as parameters down -> it is only readable this way
+		FotonRay(a,b, color*refl, closest, depth-1).shotAt(space);
+	}
+	if(transp != BLACK) {
+		const Vect3D a = getClosestCross();
+		const Vect3D b = getClosestCross()+refrV(closest);
+		FotonRay(a,b, color*transp, closest, depth-1).shotAt(space);
+	}
 }

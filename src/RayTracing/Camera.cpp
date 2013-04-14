@@ -23,36 +23,38 @@ Vect3D GeoRot3D::getZ() const {
 	const Vect3D x1 = Axis3D(y0).rot(x0,lon);	//then we need to find out the axis of latitude..
 	return Axis3D(x1).rot(z1,lat);
 }
+//--------------------------------------Movable3DTool----------------------------------------------------------------
+Movable3DTool::Movable3DTool() {}
+void Movable3DTool::setPos(const Vect3D pos) {this->pos = pos;}
+void Movable3DTool::setHVDir(const Vect3D hdir, const Vect3D vdir, const Vect3D dir) {
+	this->hdir = hdir;
+	this->vdir = vdir;
+	this->dir = dir;
+}
+void Movable3DTool::setHVDir(const GeoRot3D rot) {
+	setHVDir(rot.getX()
+		, rot.getY()
+		, -rot.getZ());	//TODO: document this
+}
+void Movable3DTool::stepPos(const float thdir, const float tvdir,const float tdir) {
+	pos += hdir*thdir;
+	pos += vdir*tvdir;
+	pos += dir*tdir;
+}
+Vect3D Movable3DTool::getPos() const	{return pos;}
+Vect3D Movable3DTool::getHdir() const	{return hdir;}
+Vect3D Movable3DTool::getVdir() const	{return vdir;}
+Vect3D Movable3DTool::getDir() const	{return dir;}
 //--------------------------------------AbstractCam----------------------------------------------------------------
-AbstractCam::AbstractCam() {
+AbstractCam::AbstractCam() : Movable3DTool() {
 	space = NULL;
 	aov = 1.0;
 	setRes(0,0);
 }
 void AbstractCam::setSpace(const DetailedSpace3D * const space) {this->space = space;}
-void AbstractCam::setPos(const Vect3D pos) {this->pos = pos;}
-void AbstractCam::setHVDir(const Vect3D hdir, const Vect3D vdir, const Vect3D dir) {
-	this->hdir = hdir;
-	this->vdir = vdir;
-	this->dir = dir;
-}
-void AbstractCam::setHVDir(const GeoRot3D rot) {
-	setHVDir(rot.getX()
-		, rot.getY()
-		, -rot.getZ());	//TODO: document this
-}
 void AbstractCam::setAov(const float aov)						{this->aov = aov;}
 void AbstractCam::setRes(const float xres, const float yres) 	{this->xres = xres; this->yres = yres;}
-void AbstractCam::stepPos(const float thdir, const float tvdir,const float tdir) {
-	pos += hdir*thdir;
-	pos += vdir*tvdir;
-	pos += dir*tdir;
-}
 const DetailedSpace3D* AbstractCam::getSpace() const	{return space;}
-Vect3D AbstractCam::getPos() const						{return pos;}
-Vect3D AbstractCam::getHdir() const					{return hdir;}
-Vect3D AbstractCam::getVdir() const					{return vdir;}
-Vect3D AbstractCam::getDir() const						{return dir;}
 float AbstractCam::getAov() const						{return aov;}
 int AbstractCam::getXres() const						{return xres;}
 int AbstractCam::getYres() const						{return yres;}
@@ -60,19 +62,19 @@ float AbstractCam::getAvgRes() const					{return (float)(xres+yres)/2.0;}
 //--------------------------------------VectorCam----------------------------------------------------------------
 VectorCam::VectorCam() {calcPlanes();}
 void VectorCam::setPos(const Vect3D pos) {
-	AbstractCam::setPos(pos);
+	Movable3DTool::setPos(pos);
 	calcPlanes();
 }
 void VectorCam::setHVDir(const Vect3D hdir, const Vect3D vdir, const Vect3D dir) {
-	AbstractCam::setHVDir(hdir,vdir,dir);
+	Movable3DTool::setHVDir(hdir,vdir,dir);
 	calcPlanes();
 }
 void VectorCam::setHVDir(const GeoRot3D rot) {
-	AbstractCam::setHVDir(rot);
+	Movable3DTool::setHVDir(rot);
 	calcPlanes();
 }
 void VectorCam::stepPos(const float thdir, const float tvdir,const float tdir) {
-	AbstractCam::stepPos(thdir,tvdir,tdir);
+	Movable3DTool::stepPos(thdir,tvdir,tdir);
 	calcPlanes();
 }
 DetailedSpace2D VectorCam::project() const {
@@ -132,3 +134,37 @@ Color RayTracerCam::calcColor(const int x, const int y) const {
 				hdir, vdir, dof, dof/density).shotAt(*getSpace());
 	return result;
 }
+//--------------------------------------Lamp----------------------------------------------------------------
+Lamp::Lamp() {}
+void Lamp::setRes(const float hangle, const float vangle, const float rangle) {
+	unsigned int hres = hangle / rangle;
+	unsigned int vres = vangle / rangle;
+	screen = std::vector<std::vector<Vect3D> > (hres, std::vector<Vect3D>(vres));	//nice one, isnt it?
+	
+	//we will rotate around this
+	Axis3D y(getVdir());
+	
+	/*const Rot2D srot(rangle);	//step rotation
+	const Rot2D hrot(-hres/2);	//horizontal rotation for each rays - starting from left
+	const rot2D vrot(-vres/2);	//vertical rotation for each rays - starting from bottom
+	
+	const Vect3D dir0 = getDir();
+	const Vect3D hdir0 = getHdir();
+	
+	short int d = 1;	//direction of rendering
+	for(unsigned int i=0; i<hres; i++) {
+		const Vect3D hdir1 = y.rot(hdir0, hrot);
+		const Axis3D x1(hdir1);
+		
+		const Vect3D dir1 = x1.rot(dir0,vrot);
+		const Vect3D dir2 = y.rot(dir1,hrot);
+
+		for(unsigned int j=0; j<vres; j++) {
+			hrot += srot;
+			//screen[i][j].set( 
+		}
+	}*/
+}
+void Lamp::shotAt(const DetailedSpace3D * const space) const {
+	//TODO
+};

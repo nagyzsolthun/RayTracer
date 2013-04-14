@@ -58,6 +58,14 @@ void Color::operator+=(const Color o)			{r+=o.r; g+=o.g; b+=o.b;}
 float Color::getR() const	{return r;}
 float Color::getG() const	{return g;}
 float Color::getB() const	{return b;}
+//--------------------------------------Foton----------------------------------------------------------------
+Foton::Foton() {}
+Foton::Foton(const Vect3D pos, const Color color) {
+	this->pos = pos;
+	this->color = color;
+}
+Vect3D Foton::getPos() const		{return pos;}
+Color Foton::getColor() const		{return color;}
 //--------------------------------------DetailedTri3D----------------------------------------------------------------
 DetailedTri3D::DetailedTri3D(const Vect3D a, const Vect3D b, const Vect3D c) : CrossableTri3D(a,b,c)		{}
 void DetailedTri3D::setActive(const Color active)		{this->active = active;}
@@ -68,6 +76,15 @@ Color DetailedTri3D::getActive() const					{return active;}
 Color DetailedTri3D::getRefl() const					{return refl;}
 Color DetailedTri3D::getTransp() const					{return transp;}
 float DetailedTri3D::getRefr() const					{return refr;}
+void DetailedTri3D::addFoton(const Foton foton) const	{fotons.push_back(foton);}
+Color DetailedTri3D::getBrightess(const Vect3D pos, const float r) const {
+	Color result;
+	for(std::list<Foton>::const_iterator i = fotons.begin(); i != fotons.end(); i++) {
+		const float dist2 = pos.dist2((*i).getPos());
+		if(dist2 < r*r) result += (*i).getColor();
+	}
+	return result;
+}
 //--------------------------------------DetailedTri2D----------------------------------------------------------------
 DetailedTri2D::DetailedTri2D() {}
 DetailedTri2D::DetailedTri2D(const Vect2D a, const Vect2D b, const Vect2D c)	{set(a,b,c);}
